@@ -7,7 +7,7 @@
     <session-factory>
         <!-- Configuración de la conexión a MySQL -->
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/ad</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3307/ad</property>
         <property name="hibernate.connection.username">root</property>
         <property name="hibernate.connection.password">root</property>
 
@@ -25,6 +25,7 @@
         <!-- Mapeo de clases de entidad (añade tus clases aquí) -->
         <mapping class="org.example.retoconjuntojavafxhibernate.pelicula.Pelicula"/>
         <mapping class="org.example.retoconjuntojavafxhibernate.user.User"/>
+        <mapping class="org.example.retoconjuntojavafxhibernate.copiaPelicula.CopiaPelicula"/>
         <!-- <mapping class="com.tuempresa.modelo.Producto"/> -->
 
     </session-factory>

@@ -5,6 +5,9 @@ import org.example.retoconjuntojavafxhibernate.pelicula.Pelicula;
 import org.example.retoconjuntojavafxhibernate.utils.DataProvider;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
+
+import java.util.List;
 
 public class UserService {
 
@@ -114,4 +117,23 @@ public class UserService {
             return null;
         }
     }
+
+    public List<Pelicula> findAllPeliculas() {
+        try (Session session = DataProvider.getSessionFactory().openSession()) {
+            return session.createQuery("FROM Pelicula", Pelicula.class).list();
+        }
+    }
+
+    public User getUserWithDependencies(Integer userId) {
+        try (Session session = DataProvider.getSessionFactory().openSession()) {
+            Query<User> q = session.createQuery(
+                    "SELECT u FROM User u " +
+                            "LEFT JOIN FETCH u.copiaAsignada c " +
+                            "LEFT JOIN FETCH c.pelicula " +
+                            "WHERE u.id = :id", User.class);
+            q.setParameter("id", userId);
+            return q.uniqueResult();
+        }
+    }
+
 }

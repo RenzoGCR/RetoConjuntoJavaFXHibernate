@@ -14,7 +14,7 @@ public class AuthService {
     }
 
     public Optional<User> validateUser(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
+        Optional<User> user = userRepository.findByNombreUsuario(email);
         if (user.isPresent()) {
             if (user.get().getContraseña().equals(password)) {
                 return user;

@@ -46,11 +46,11 @@ public class UserRepository implements Repository<User> {
         return 0L;
     }
 
-    public Optional<User> findByEmail(String email) {
+    public Optional<User> findByNombreUsuario(String nombreUsuario) {
         try(Session session = sessionFactory.openSession()) {
             Query<User> q = session.createQuery(
-                    "from User where email=:email",User.class);
-            q.setParameter("email", email);
+                    "from User where nombreUsuario=:nombre",User.class);
+            q.setParameter("nombre", nombreUsuario);
             return Optional.ofNullable(q.uniqueResult());
         }
     }

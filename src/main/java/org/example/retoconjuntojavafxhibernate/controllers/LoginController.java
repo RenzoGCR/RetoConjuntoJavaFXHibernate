@@ -38,7 +38,7 @@ public class LoginController implements Initializable {
             SimpleSessionService sessionService = new SimpleSessionService();
             sessionService.login(user.get());
             sessionService.setObject("id", user.get().getId());
-            JavaFXUtil.setScene("/org/example/GestorVideojuegosHibernateJavaFX/main-view.fxml");
+            JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/main-view.fxml");
         }
     }
 

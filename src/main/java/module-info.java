@@ -4,6 +4,7 @@ module org.example.retoconjuntojavafxhibernate {
     requires static lombok;
     requires jakarta.persistence;
     requires org.hibernate.orm.core;
+    requires java.naming;
 
     opens org.example.retoconjuntojavafxhibernate to javafx.fxml;
     exports org.example.retoconjuntojavafxhibernate;
@@ -15,6 +16,7 @@ module org.example.retoconjuntojavafxhibernate {
     opens org.example.retoconjuntojavafxhibernate.pelicula;
     exports org.example.retoconjuntojavafxhibernate.utils;
     opens org.example.retoconjuntojavafxhibernate.utils;
+    opens org.example.retoconjuntojavafxhibernate.copiaPelicula;
 
 
 }

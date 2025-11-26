@@ -25,7 +25,7 @@ public class CopiaPelicula {
     private Pelicula pelicula;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id_user")
+    @JoinColumn(name = "user_id", referencedColumnName = "id_usuario")
     private User usuario;
 
     @Column(name = "estado")
