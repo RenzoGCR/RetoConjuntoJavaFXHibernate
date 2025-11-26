@@ -28,6 +28,8 @@ public class User implements Serializable {
     @Column(name = "contraseña")
     private String contraseña;
 
+    private boolean isAdmin;
+
     @OneToOne(
             mappedBy = "usuario", // Nombre del campo en la clase CopiaPelicula que apunta a este User
             cascade = CascadeType.ALL,
