@@ -1,6 +1,7 @@
 package org.example.retoconjuntojavafxhibernate.controllers;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import org.example.retoconjuntojavafxhibernate.session.AuthService;
@@ -33,8 +34,8 @@ public class LoginController implements Initializable {
 
     @javafx.fxml.FXML
     public void entrar(ActionEvent actionEvent) {
-        Optional<User> user = authService.validateUser(txtCorreo.getText(),txtContraseña.getText() );
-        if (user.isPresent()){
+        Optional<User> user = authService.validateUser(txtCorreo.getText(), txtContraseña.getText());
+        if (user.isPresent()) {
             SimpleSessionService sessionService = new SimpleSessionService();
             sessionService.login(user.get());
             sessionService.setObject("id", user.get().getId());

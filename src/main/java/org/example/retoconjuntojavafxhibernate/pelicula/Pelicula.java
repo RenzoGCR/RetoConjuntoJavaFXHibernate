@@ -1,9 +1,7 @@
 package org.example.retoconjuntojavafxhibernate.pelicula;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.retoconjuntojavafxhibernate.copiaPelicula.CopiaPelicula;
 
 import java.io.Serializable;
@@ -11,9 +9,11 @@ import java.util.Set;
 
 @Entity
 @Table(name="peliculas")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(exclude = "copias") // Excluir la colección para evitar problemas de recursión y lazy loading
 public class Pelicula implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +46,7 @@ public class Pelicula implements Serializable {
 
     @Override
     public String toString() {
+        // IMPORTANTE: Nunca incluir colecciones LAZY en toString() para evitar LazyInitializationException
         return "Pelicula{" +
                 "id=" + id +
                 ", titulo='" + titulo + '\'' +
@@ -53,7 +54,6 @@ public class Pelicula implements Serializable {
                 ", año=" + año +
                 ", descripcion='" + descripcion + '\'' +
                 ", director='" + director + '\'' +
-                ", copias=" + copias +
                 ", image_url='" + image_url + '\'' +
                 '}';
     }

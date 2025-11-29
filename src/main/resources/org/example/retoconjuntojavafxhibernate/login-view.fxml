@@ -40,8 +40,8 @@
                <children>
                   <Label text="Correo" />
                   <Label text="Contraseña" GridPane.rowIndex="1" />
-                  <TextField fx:id="txtCorreo" text="f@cesur.com" GridPane.columnIndex="1" />
-                  <TextField fx:id="txtContraseña" text="1234" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <TextField fx:id="txtCorreo" text="admin1" GridPane.columnIndex="1" />
+                  <TextField fx:id="txtContraseña" text="root" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                </children>
             </GridPane>
             <FlowPane alignment="CENTER" columnHalignment="CENTER" hgap="20.0" prefHeight="42.0" prefWidth="426.0" vgap="20.0">

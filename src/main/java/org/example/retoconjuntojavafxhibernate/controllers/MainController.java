@@ -81,6 +81,7 @@ public class MainController implements Initializable {
             return;
         }
 
+        // Carga inicial del usuario con todas sus dependencias
         currentUser = userService.getUserWithDependencies(basicUser.getId());
         sessionService.login(currentUser);
 
@@ -94,20 +95,15 @@ public class MainController implements Initializable {
         // 1. Mostrar herramientas de administración
         menuAdmin.setVisible(true);
 
-        // 2. Cargar la tabla del CATÁLOGO (Lo que querías añadir)
-        // Reutilizamos los mismos métodos que usa el usuario normal
+        // 2. Cargar la tabla del CATÁLOGO
         configurarTablaCatalogo();
         cargarCatalogo();
 
-        // 3. Dejar la tabla de COPIAS vacía
-        // Al no llamar a 'cargarDatosUsuario()', la lista no se llena.
-        // Opcionalmente, puedes establecer un mensaje o limpiar explícitamente:
-        table.setItems(FXCollections.observableArrayList()); // Asegura que esté vacía
+        // 3. Cargar la tabla de COPIAS vacía
+        table.setItems(FXCollections.observableArrayList());
         table.setPlaceholder(new Label("Vista de Admin: No gestiona copias personales"));
 
-        // OPCIONAL: Desactivar el botón de alquilar para el admin
-        // (Ya que la lógica de 'alquilar' para admin en tu servicio intentaba CREAR películas nuevas,
-        //  no alquilar existentes, y podría dar error si seleccionas una existente).
+        // Desactivar el botón de alquilar para el admin
         btnAlquilar.setVisible(false);
     }
     private void configurarVistaUsuario() {
@@ -139,7 +135,6 @@ public class MainController implements Initializable {
 
     @javafx.fxml.FXML
     public void alquilarPelicula(ActionEvent actionEvent) {
-        // 1. Obtener la selección de la tabla de CATÁLOGO
         Pelicula seleccionada = tablaCatalogo.getSelectionModel().getSelectedItem();
 
         if (seleccionada == null) {
@@ -148,20 +143,20 @@ public class MainController implements Initializable {
         }
 
         try {
-            // 2. Llamar a tu lógica existente en UserService
-            User usuarioActualizado = userService.addPeliculaOrCopia(currentUser, seleccionada);
+            // 1. Ejecutar la operación de escritura en la base de datos
+            userService.addPeliculaOrCopia(currentUser, seleccionada);
 
-            if (usuarioActualizado != null) {
-                // 3. Éxito: Actualizar usuario y refrescar tabla de copias
-                currentUser = usuarioActualizado;
-                sessionService.login(currentUser);
+            // 2. Éxito: Volver a cargar el usuario desde la BD con todas sus dependencias
+            currentUser = userService.getUserWithDependencies(currentUser.getId());
+            sessionService.login(currentUser); // Actualizar la sesión global
 
-                cargarDatosUsuario(); // Refresca la tabla de arriba (Mis copias)
-                mostrarAlerta("Éxito", "Has alquilado: " + seleccionada.getTitulo());
-            }
+            // 3. Refrescar la tabla de copias del usuario con el objeto recién cargado
+            cargarDatosUsuario();
+            mostrarAlerta("Éxito", "Has alquilado: " + seleccionada.getTitulo());
 
         } catch (Exception e) {
-            mostrarAlerta("Error", e.getMessage()); // Muestra "El usuario ya tiene una película..."
+            // Mostramos el mensaje de la excepción que viene del servicio
+            mostrarAlerta("Error", e.getMessage());
         }
     }
 
@@ -173,51 +168,23 @@ public class MainController implements Initializable {
     }
 
     private void configurarTablaCopias() {
-        // 1. TÍTULO
-        titulo.setCellValueFactory(cellData -> {
-            Pelicula p = cellData.getValue().getPelicula();
-            if (p != null) return new SimpleStringProperty(p.getTitulo());
-            return new SimpleStringProperty("Sin Info");
-        });
-
-        // 2. GÉNERO
-        genero.setCellValueFactory(cellData -> {
-            Pelicula p = cellData.getValue().getPelicula();
-            if (p != null) return new SimpleStringProperty(p.getGenero());
-            return new SimpleStringProperty("");
-        });
-
-        // 3. DIRECTOR
-        director.setCellValueFactory(cellData -> {
-            Pelicula p = cellData.getValue().getPelicula();
-            if (p != null) return new SimpleStringProperty(p.getDirector());
-            return new SimpleStringProperty("");
-        });
-
-        // 4. DESCRIPCIÓN
-        descripcion.setCellValueFactory(cellData -> {
-            Pelicula p = cellData.getValue().getPelicula();
-            if (p != null) return new SimpleStringProperty(p.getDescripcion());
-            return new SimpleStringProperty("");
-        });
-
-        // 5. AÑO (Manejamos Integer)
-        año.setCellValueFactory(cellData -> {
-            Pelicula p = cellData.getValue().getPelicula();
-            if (p != null && p.getAño() != null) return new SimpleIntegerProperty(p.getAño()).asObject();
-            return null;
-        });
+        titulo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getTitulo()));
+        genero.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getGenero()));
+        director.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getDirector()));
+        descripcion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getDescripcion()));
+        año.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getPelicula().getAño()).asObject());
     }
     private void cargarDatosUsuario() {
         ObservableList<CopiaPelicula> copias = FXCollections.observableArrayList();
-
-        // Como la relación es 1 a 1, obtenemos la única copia.
-        // Verificamos si tiene una asignada para evitar NullPointerException
-        if (currentUser.getCopiaAsignada() != null) {
+        if (currentUser != null && currentUser.getCopiaAsignada() != null) {
             copias.add(currentUser.getCopiaAsignada());
         }
-
         table.setItems(copias);
     }
 
+    @javafx.fxml.FXML
+    public void añadirPelicula(ActionEvent actionEvent) {
+        // Este es el método que se debe usar en el FXML para el MenuItem
+        JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/newFilmForm-view.fxml");
+    }
 }
