@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import org.example.retoconjuntojavafxhibernate.copiaPelicula.CopiaPelicula;
 import org.example.retoconjuntojavafxhibernate.pelicula.Pelicula;
 import org.example.retoconjuntojavafxhibernate.session.SimpleSessionService;
@@ -17,6 +18,11 @@ import org.example.retoconjuntojavafxhibernate.utils.JavaFXUtil;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Controlador principal de la aplicación (main-view.fxml).
+ * Gestiona la vista principal, mostrando el catálogo de películas y las copias del usuario.
+ * Adapta la interfaz dependiendo de si el usuario es administrador o no.
+ */
 public class MainController implements Initializable {
     @javafx.fxml.FXML
     private MenuBar menuBar;
@@ -57,33 +63,54 @@ public class MainController implements Initializable {
     private TableColumn<Pelicula, String> colCatGenero;
 
 
+    /**
+     * Cierra la sesión del usuario actual y vuelve a la pantalla de login.
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void cerrarSesion(ActionEvent actionEvent) {
-        // Limpiar sesión
         sessionService.logout();
-        // Volver a la pantalla de login
         JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/login-view.fxml");
     }
 
+    /**
+     * Cierra la aplicación.
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void salir(ActionEvent actionEvent) {
         System.exit(0);
     }
 
+    /**
+     * Inicializa el controlador. Carga el usuario de la sesión, determina si es
+     * administrador y configura la vista correspondientemente.
+     * @param url La ubicación utilizada para resolver rutas relativas.
+     * @param resourceBundle Los recursos utilizados para localizar el objeto raíz.
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         User basicUser = sessionService.getActive();
 
-
         if (basicUser == null) {
-            System.out.println("Error: No hay usuario en sesión. Redirigiendo al login...");
             JavaFXUtil.setScene("login-view.fxml");
             return;
         }
 
-        // Carga inicial del usuario con todas sus dependencias
         currentUser = userService.getUserWithDependencies(basicUser.getId());
         sessionService.login(currentUser);
+
+        // Configurar el listener de doble clic para la tabla de catálogo
+        tablaCatalogo.setRowFactory(tv -> {
+            TableRow<Pelicula> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (!row.isEmpty() && event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+                    Pelicula clickedPelicula = row.getItem();
+                    verDetallePelicula(clickedPelicula);
+                }
+            });
+            return row;
+        });
 
         if (currentUser.isAdmin()) {
             configurarVistaAdmin();
@@ -91,82 +118,118 @@ public class MainController implements Initializable {
             configurarVistaUsuario();
         }
     }
-    private void configurarVistaAdmin() {
-        // 1. Mostrar herramientas de administración
-        menuAdmin.setVisible(true);
 
-        // 2. Cargar la tabla del CATÁLOGO
+    /**
+     * Guarda la película seleccionada en la sesión y navega a la vista de detalle.
+     * @param pelicula La película para mostrar en detalle.
+     */
+    private void verDetallePelicula(Pelicula pelicula) {
+        // Guardar la película en el servicio de sesión para que el siguiente controlador pueda acceder a ella
+        sessionService.setObject("pelicula_seleccionada", pelicula);
+        // Cambiar a la escena de detalle
+        JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/detail-view.fxml");
+    }
+
+    /**
+     * Configura la interfaz para un usuario administrador.
+     * Muestra el menú de administración y oculta los controles de usuario.
+     */
+    private void configurarVistaAdmin() {
+        menuAdmin.setVisible(true);
         configurarTablaCatalogo();
         cargarCatalogo();
-
-        // 3. Cargar la tabla de COPIAS vacía
         table.setItems(FXCollections.observableArrayList());
         table.setPlaceholder(new Label("Vista de Admin: No gestiona copias personales"));
-
-        // Desactivar el botón de alquilar para el admin
         btnAlquilar.setVisible(false);
     }
+
+    /**
+     * Configura la interfaz para un usuario estándar.
+     * Oculta el menú de administración y muestra las copias del usuario.
+     */
     private void configurarVistaUsuario() {
-        // Si NO es Admin, ocultamos el menú
         menuAdmin.setVisible(false);
-
-        // Configuramos las columnas de la tabla para mostrar la CopiaPelicula
         configurarTablaCopias();
-
-        // Cargamos la copia asignada al usuario
         cargarDatosUsuario();
-
         configurarTablaCatalogo();
         cargarCatalogo();
     }
 
+    /**
+     * Configura las columnas de la tabla del catálogo de películas.
+     */
     private void configurarTablaCatalogo() {
-        // Vinculamos las columnas de la tabla de películas disponibles
         colCatTitulo.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getTitulo()));
         colCatGenero.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getGenero()));
         colCatAnio.setCellValueFactory(cell -> new SimpleIntegerProperty(cell.getValue().getAño()).asObject());
     }
 
+    /**
+     * Carga todas las películas de la base de datos en la tabla del catálogo.
+     */
     private void cargarCatalogo() {
-        // Usamos el nuevo metodo del servicio para traer todas las películas
         var listaPeliculas = userService.findAllPeliculas();
         tablaCatalogo.setItems(FXCollections.observableArrayList(listaPeliculas));
     }
 
+    /**
+     * Maneja el evento de alquilar una película.
+     * Crea una copia de la película seleccionada y la asigna al usuario actual.
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void alquilarPelicula(ActionEvent actionEvent) {
         Pelicula seleccionada = tablaCatalogo.getSelectionModel().getSelectedItem();
-
         if (seleccionada == null) {
             mostrarAlerta("Atención", "Selecciona una película del catálogo primero.");
             return;
         }
 
         try {
-            // 1. Ejecutar la operación de escritura en la base de datos
             userService.addPeliculaOrCopia(currentUser, seleccionada);
-
-            // 2. Éxito: Volver a cargar el usuario desde la BD con todas sus dependencias
-            currentUser = userService.getUserWithDependencies(currentUser.getId());
-            sessionService.login(currentUser); // Actualizar la sesión global
-
-            // 3. Refrescar la tabla de copias del usuario con el objeto recién cargado
-            cargarDatosUsuario();
-            mostrarAlerta("Éxito", "Has alquilado: " + seleccionada.getTitulo());
+            mostrarAlerta("Éxito", "Película alquilada en la base de datos. Por favor, pulse 'Refrescar' para ver los cambios.");
 
         } catch (Exception e) {
-            // Mostramos el mensaje de la excepción que viene del servicio
-            mostrarAlerta("Error", e.getMessage());
+            mostrarAlerta("Error de escritura", e.getMessage());
+            e.printStackTrace();
         }
     }
 
+    /**
+     * Recarga los datos del usuario actual desde la base de datos y refresca la tabla de copias.
+     * @param actionEvent El evento que disparó esta acción.
+     */
+    @javafx.fxml.FXML
+    public void refrescarVistaUsuario(ActionEvent actionEvent) {
+        try {
+            System.out.println("Refrescando vista de usuario...");
+            currentUser = userService.getUserWithDependencies(currentUser.getId());
+            sessionService.login(currentUser);
+            cargarDatosUsuario();
+            System.out.println("Vista refrescada.");
+        } catch (Exception e) {
+            mostrarAlerta("Error al refrescar la vista", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Muestra una ventana de alerta simple.
+     * @param titulo El título de la ventana de alerta.
+     * @param contenido El mensaje a mostrar en la alerta.
+     */
     private void mostrarAlerta(String titulo, String contenido) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);
+        alert.setHeaderText(null);
         alert.setContentText(contenido);
-        alert.show();
+        alert.showAndWait();
     }
 
+    /**
+     * Configura las columnas de la tabla de copias del usuario.
+     */
     private void configurarTablaCopias() {
         titulo.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getTitulo()));
         genero.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getGenero()));
@@ -174,6 +237,10 @@ public class MainController implements Initializable {
         descripcion.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPelicula().getDescripcion()));
         año.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getPelicula().getAño()).asObject());
     }
+
+    /**
+     * Carga la copia de la película asignada al usuario actual en la tabla de copias.
+     */
     private void cargarDatosUsuario() {
         ObservableList<CopiaPelicula> copias = FXCollections.observableArrayList();
         if (currentUser != null && currentUser.getCopiaAsignada() != null) {
@@ -182,9 +249,12 @@ public class MainController implements Initializable {
         table.setItems(copias);
     }
 
+    /**
+     * Navega a la vista del formulario para añadir una nueva película.
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void añadirPelicula(ActionEvent actionEvent) {
-        // Este es el método que se debe usar en el FXML para el MenuItem
         JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/newFilmForm-view.fxml");
     }
 }

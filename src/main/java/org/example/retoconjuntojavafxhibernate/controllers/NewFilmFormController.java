@@ -9,6 +9,10 @@ import org.example.retoconjuntojavafxhibernate.pelicula.Pelicula;
 import org.example.retoconjuntojavafxhibernate.user.UserService;
 import org.example.retoconjuntojavafxhibernate.utils.JavaFXUtil;
 
+/**
+ * Controlador para la vista de formulario de nueva película (newFilmForm-view.fxml).
+ * Permite a los administradores añadir nuevas películas al catálogo.
+ */
 public class NewFilmFormController {
 
     @javafx.fxml.FXML
@@ -26,15 +30,26 @@ public class NewFilmFormController {
     @javafx.fxml.FXML
     private TextField tfAño;
 
-    // El controlador ahora necesita su propio servicio para guardar la película
     private final UserService userService = new UserService();
 
+    /**
+     * Maneja el evento del botón "Cancelar".
+     * Aborta la creación de la película y vuelve a la vista principal.
+     *
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void cancelar(ActionEvent actionEvent) {
-        // Simplemente vuelve a la vista principal
         JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/main-view.fxml");
     }
 
+    /**
+     * Maneja el evento del botón "Agregar".
+     * Recoge los datos del formulario, crea un nuevo objeto Pelicula,
+     * lo guarda en la base de datos y luego vuelve a la vista principal.
+     *
+     * @param actionEvent El evento que disparó esta acción.
+     */
     @javafx.fxml.FXML
     public void agregar(ActionEvent actionEvent) {
         String titulo = tfTitulo.getText();
@@ -58,12 +73,10 @@ public class NewFilmFormController {
             nuevaPelicula.setDirector(director);
             nuevaPelicula.setDescripcion(descripcion);
 
-            // El propio controlador se encarga de guardar la película
             Pelicula peliculaGuardada = userService.savePelicula(nuevaPelicula);
 
             if (peliculaGuardada != null) {
                 JavaFXUtil.showModal(Alert.AlertType.INFORMATION, "Éxito", "Película guardada", "La película ha sido añadida al catálogo.");
-                // Y después de guardar, vuelve a la vista principal
                 JavaFXUtil.setScene("/org/example/retoconjuntojavafxhibernate/main-view.fxml");
             } else {
                 JavaFXUtil.showModal(Alert.AlertType.ERROR, "Error", "Error en la base de datos", "No se pudo guardar la película.");
