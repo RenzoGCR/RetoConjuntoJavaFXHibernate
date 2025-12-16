@@ -81,6 +81,26 @@ public class UserService {
     }
 
     /**
+     * Actualiza los datos de una película existente en la base de datos.
+     *
+     * @param pelicula La película con los datos modificados.
+     */
+    public void updatePelicula(Pelicula pelicula) {
+        Transaction transaction = null;
+        try (Session session = DataProvider.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+            // merge actualiza una entidad existente o la guarda si es nueva (pero aquí esperamos que exista)
+            session.merge(pelicula);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            throw new RuntimeException("Error al actualizar la película: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Elimina la copia de una película asignada a un usuario (devolución).
      * Si el usuario es administrador, podría tener otra lógica (actualmente no implementada aquí).
      *

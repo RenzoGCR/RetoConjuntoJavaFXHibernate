@@ -55,6 +55,7 @@
             <Button fx:id="cerrarSesion" mnemonicParsing="false" onAction="#cerrarSesion" text="Cerrar Sesion" />
             <Button fx:id="salir" mnemonicParsing="false" onAction="#salir" text="Salir" />
             <Button fx:id="btnAlquilar" mnemonicParsing="false" onAction="#alquilarPelicula" text="Alquilar" />
+            <Button fx:id="btnEliminar" mnemonicParsing="false" onAction="#eliminarPelicula" text="Eliminar" visible="false" />
          </children>
       </FlowPane>
    </bottom>
