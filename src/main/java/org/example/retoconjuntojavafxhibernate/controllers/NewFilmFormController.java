@@ -66,6 +66,12 @@ public class NewFilmFormController {
         try {
             int año = Integer.parseInt(añoStr);
 
+            // VALIDACIÓN AÑADIDA: El año debe ser mayor que 0
+            if (año <= 0) {
+                JavaFXUtil.showModal(Alert.AlertType.WARNING, "Dato inválido", "Año incorrecto", "El año debe ser un número positivo mayor que 0.");
+                return; // Detenemos la ejecución aquí
+            }
+
             Pelicula nuevaPelicula = new Pelicula();
             nuevaPelicula.setTitulo(titulo);
             nuevaPelicula.setGenero(genero);
